@@ -93,7 +93,7 @@ fn f(t: usize) -> Box<dyn Fn(u32, u32, u32) -> u32> {
         20..=39 => |x, y, z| x ^ y ^ z,
         40..=59 => |x, y, z| (x & y) ^ (x & z) ^ (y & z),
         60..=79 => |x, y, z| x ^ y ^ z,
-        x => panic!("{} not in range 0..80", x),
+        _ => unreachable!(),
     })
 }
 
@@ -103,6 +103,6 @@ fn k(t: usize) -> u32 {
         20..=39 => 0x6ed9eba1,
         40..=59 => 0x8f1bbcdc,
         60..=79 => 0xca62c1d6,
-        x => panic!("{} not in range 0..80", x),
+        _ => unreachable!(),
     }
 }

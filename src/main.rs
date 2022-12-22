@@ -1,11 +1,5 @@
-use cryptography::sha::sha512::Sha512;
+use cryptography::sha::print_digest;
 
 fn main() {
-    println!(
-        "{}",
-        Sha512::new("hello".as_bytes())
-            .result()
-            .iter()
-            .fold("".to_string(), |acc, x| format!("{acc}{:x}", *x))
-    )
+    println!("Sha256 for \"hello\":\n{}", print_digest(256, "hello"))
 }

@@ -34,7 +34,7 @@ impl Sha512 {
             .unwrap()
     }
 
-    pub fn compute(&mut self) -> &mut Self {
+    fn compute(&mut self) -> &mut Self {
         for i in 1..=self.state.len() {
             self.schedule = prepare_schedule(self.schedule, self.state[i - 1]);
 
