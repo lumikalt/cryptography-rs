@@ -1,5 +1,7 @@
-use cryptography::sha::print_digest;
+use cryptography::sha::sha3::Sha3;
 
 fn main() {
-    println!("Sha256 for \"hello\":\n{}", print_digest(256, "hello"))
+    let mut s = Sha3::new(vec![]);
+
+    println!("{}", s.keccak(256));
 }

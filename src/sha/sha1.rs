@@ -5,8 +5,8 @@ pub struct Sha1 {
 }
 
 impl Sha1 {
-    pub fn new(msg: &[u8]) -> Self {
-        Self {
+    pub fn new(msg: &[u8]) -> Sha1 {
+        Sha1 {
             hash: [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0],
             state: preprocess(msg),
             schedule: [0; 80],
@@ -25,7 +25,7 @@ impl Sha1 {
             .unwrap()
     }
 
-    fn compute(&mut self) -> &mut Self {
+    fn compute(&mut self) {
         for i in 1..=self.state.len() {
             self.schedule = prepare_schedule(self.schedule, self.state[i - 1]);
 
@@ -55,8 +55,6 @@ impl Sha1 {
                 h[4].wrapping_add(e),
             ]
         }
-
-        self
     }
 }
 
@@ -64,7 +62,7 @@ fn preprocess(msg: &[u8]) -> Vec<[u32; 16]> {
     let len = msg.len() + 64 - msg.len() % 64;
     let mut res = vec![0; len + 64 * (msg.len() % 64 >= 56) as usize];
 
-    res[..msg.len()].copy_from_slice(&msg);
+    res[..msg.len()].copy_from_slice(msg);
     res[msg.len()] = 0b10000000;
 
     let l = res.len();
@@ -89,7 +87,7 @@ fn prepare_schedule(mut schedule: [u32; 80], block: [u32; 16]) -> [u32; 80] {
 
 fn f(t: usize) -> Box<dyn Fn(u32, u32, u32) -> u32> {
     Box::new(match t {
-        0..=19 => |x, y, z| (x & y) ^ (!x & z),
+        00..=19 => |x, y, z| (x & y) ^ (!x & z),
         20..=39 => |x, y, z| x ^ y ^ z,
         40..=59 => |x, y, z| (x & y) ^ (x & z) ^ (y & z),
         60..=79 => |x, y, z| x ^ y ^ z,

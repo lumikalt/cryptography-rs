@@ -29,17 +29,17 @@ impl Sha256 {
             .unwrap()
     }
 
-    fn compute(&mut self) -> &mut Sha256 {
+    fn compute(&mut self) {
         for i in 1..=self.state.len() {
             self.schedule = prepare_schedule(self.schedule, self.state[i - 1]);
 
             let [mut a, mut b, mut c, mut d, mut e, mut f, mut g, mut h]: [u32; 8] = self.hash;
 
-            for t in 0..64 {
+            for (t, k_t) in K.iter().enumerate() {
                 let t1 = h
                     .wrapping_add(Σ_1(e))
                     .wrapping_add(ch(e, f, g))
-                    .wrapping_add(K[t])
+                    .wrapping_add(*k_t)
                     .wrapping_add(self.schedule[t]);
 
                 let t2 = Σ_0(a).wrapping_add(maj(a, b, c));
@@ -66,8 +66,6 @@ impl Sha256 {
                 prev[7].wrapping_add(h),
             ];
         }
-
-        self
     }
 }
 
@@ -75,7 +73,7 @@ fn preprocess(msg: &[u8]) -> Vec<[u32; 16]> {
     let len = msg.len() + 64 - msg.len() % 64;
     let mut res = vec![0; len + 64 * (msg.len() % 64 >= 56) as usize];
 
-    res[..msg.len()].copy_from_slice(&msg);
+    res[..msg.len()].copy_from_slice(msg);
     res[msg.len()] = 0b10000000;
 
     let l = res.len();

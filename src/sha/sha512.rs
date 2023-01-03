@@ -5,8 +5,8 @@ pub struct Sha512 {
 }
 
 impl Sha512 {
-    pub fn new(msg: &[u8]) -> Self {
-        Self {
+    pub fn new(msg: &[u8]) -> Sha512 {
+        Sha512 {
             hash: [
                 0x6A09E667F3BCC908,
                 0xBB67AE8584CAA73B,
@@ -34,17 +34,17 @@ impl Sha512 {
             .unwrap()
     }
 
-    fn compute(&mut self) -> &mut Self {
+    fn compute(&mut self) {
         for i in 1..=self.state.len() {
             self.schedule = prepare_schedule(self.schedule, self.state[i - 1]);
 
             let [mut a, mut b, mut c, mut d, mut e, mut f, mut g, mut h]: [u64; 8] = self.hash;
 
-            for t in 0..80 {
+            for (t, k_t) in K.iter().enumerate() {
                 let t1 = h
                     .wrapping_add(Σ_1(e))
                     .wrapping_add(ch(e, f, g))
-                    .wrapping_add(K[t])
+                    .wrapping_add(*k_t)
                     .wrapping_add(self.schedule[t]);
 
                 let t2 = Σ_0(a).wrapping_add(maj(a, b, c));
@@ -71,8 +71,6 @@ impl Sha512 {
                 prev[7].wrapping_add(h),
             ];
         }
-
-        self
     }
 }
 
@@ -80,7 +78,7 @@ fn preprocess(msg: &[u8]) -> Vec<[u64; 16]> {
     let len = msg.len() + 128 - msg.len() % 128;
     let mut res = vec![0; len + 128 * (msg.len() % 128 >= 112) as usize];
 
-    res[..msg.len()].copy_from_slice(&msg);
+    res[..msg.len()].copy_from_slice(msg);
     res[msg.len()] = 0b10000000;
 
     let l = res.len();
@@ -104,6 +102,34 @@ fn prepare_schedule(mut schedule: [u64; 80], block: [u64; 16]) -> [u64; 80] {
     }
 
     schedule
+}
+
+// Functions:
+
+fn ch(x: u64, y: u64, z: u64) -> u64 {
+    (x & y) ^ (!x & z)
+}
+
+fn maj(x: u64, y: u64, z: u64) -> u64 {
+    (x & y) ^ (x & z) ^ (y & z)
+}
+
+#[allow(non_snake_case)]
+fn Σ_0(x: u64) -> u64 {
+    x.rotate_right(28) ^ x.rotate_right(34) ^ x.rotate_right(39)
+}
+
+#[allow(non_snake_case)]
+fn Σ_1(x: u64) -> u64 {
+    x.rotate_right(14) ^ x.rotate_right(18) ^ x.rotate_right(41)
+}
+
+fn σ_0(x: u64) -> u64 {
+    x.rotate_right(1) ^ x.rotate_right(8) ^ x.wrapping_shr(7)
+}
+
+fn σ_1(x: u64) -> u64 {
+    x.rotate_right(19) ^ x.rotate_right(61) ^ x.wrapping_shr(6)
 }
 
 // Constants:
@@ -190,31 +216,3 @@ static K: [u64; 80] = [
     0x5fcb6fab3ad6faec,
     0x6c44198c4a475817,
 ];
-
-// Functions:
-
-fn ch(x: u64, y: u64, z: u64) -> u64 {
-    (x & y) ^ (!x & z)
-}
-
-fn maj(x: u64, y: u64, z: u64) -> u64 {
-    (x & y) ^ (x & z) ^ (y & z)
-}
-
-#[allow(non_snake_case)]
-fn Σ_0(x: u64) -> u64 {
-    x.rotate_right(28) ^ x.rotate_right(34) ^ x.rotate_right(39)
-}
-
-#[allow(non_snake_case)]
-fn Σ_1(x: u64) -> u64 {
-    x.rotate_right(14) ^ x.rotate_right(18) ^ x.rotate_right(41)
-}
-
-fn σ_0(x: u64) -> u64 {
-    x.rotate_right(1) ^ x.rotate_right(8) ^ x.wrapping_shr(7)
-}
-
-fn σ_1(x: u64) -> u64 {
-    x.rotate_right(19) ^ x.rotate_right(61) ^ x.wrapping_shr(6)
-}
